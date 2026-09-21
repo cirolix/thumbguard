@@ -1,0 +1,12 @@
+# Compiled binary
+thumbguard
+*.o
+*.dSYM/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# macOS
+.DS_Store
