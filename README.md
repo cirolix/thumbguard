@@ -4,6 +4,67 @@ Keeps runaway QuickLook thumbnail processes on macOS under control —
 `WebThumbnailExtension` and `OfficeThumbnailExtension`, along with the WebKit
 render processes they leave behind.
 
+## Quick start
+
+```bash
+git clone https://github.com/cirolix/thumbguard.git
+cd thumbguard
+./install.sh
+```
+
+That is all. The script builds the binary, installs it to
+`~/.local/bin/thumbguard` and registers a LaunchAgent — the service is running
+right away and comes back at every login. No administrator rights required.
+
+**See what it is doing:**
+
+```bash
+thumbguard --status                      # watched processes and service state
+tail -f ~/Library/Logs/thumbguard.log    # live log
+```
+
+A log line looks like this:
+
+```
+2026-09-21 12:31:50 KILL    PID 85631  OfficeThumbnailExtension    sustained load, 100 % CPU
+```
+
+**Still getting heat?** Switch to block mode — no HTML/Office thumbnails at
+all, but the load cannot build up in the first place:
+
+```bash
+./install.sh --block
+```
+
+**Remove everything again:**
+
+```bash
+./uninstall.sh
+```
+
+### Requirements
+
+* macOS on Apple Silicon or Intel; tested on macOS 26 (Darwin 25.6.0)
+* Command line tools for the compiler: `xcode-select --install`
+* If `thumbguard --status` is not found, `~/.local/bin` is not on your `PATH` —
+  either call `~/.local/bin/thumbguard --status` directly or add that directory
+  to your shell profile
+
+### Already running hot right now?
+
+The installer only guards against *new* runaway processes. Clear out the ones
+that are already spinning:
+
+```bash
+pkill -9 -f "com.apple.WebKit.WebContent.EnhancedSecurity"
+pkill -9 -f "ExtensionKit/Extensions/(Web|Office)ThumbnailExtension"
+```
+
+Nothing is lost here — these are thumbnail renderers with no user data. Safari
+normally uses the plain `com.apple.WebKit.WebContent`, so ordinary browsing is
+unaffected; only if you run Lockdown Mode will Safari tabs reload. Once the
+service is installed, this cleanup is handled automatically.
+
 ## The problem
 
 macOS generates thumbnails through extensions in
@@ -79,31 +140,18 @@ matches are inspected further, and every process is classified **exactly
 once** — after that the verdict is cached and costs nothing. Measured while
 idle: **0.05 % CPU and 1.9 MB RAM**.
 
-## Installation
+## What the installer does
 
-```bash
-./install.sh
-```
-
-This builds the program, places it at `~/.local/bin/thumbguard` and registers a
+It builds the program, places it at `~/.local/bin/thumbguard` and registers a
 LaunchAgent that starts automatically at every login. No administrator rights
 required — the target processes run under the same user account. The service is
 named `local.thumbguard`; its log lives at `~/Library/Logs/thumbguard.log`.
 
-Removal:
-
-```bash
-./uninstall.sh
-```
+`./uninstall.sh` reverses all of it and leaves only the log file behind.
 
 ## Usage
 
-```bash
-thumbguard --status          # running target processes and service state
-tail -f ~/Library/Logs/thumbguard.log
-```
-
-Sample output:
+`thumbguard --status` shows what is being watched and whether the service is up:
 
 ```
 Watching: WebThumbnailExtension,OfficeThumbnailExtension
@@ -114,12 +162,6 @@ Running thumbnail processes:
   ([x] = watched)
 
 Service: running
-```
-
-A log entry looks like this:
-
-```
-2026-09-21 12:31:50 KILL    PID 85631  OfficeThumbnailExtension    sustained load, 100 % CPU
 ```
 
 ## Modes
