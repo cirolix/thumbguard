@@ -13,14 +13,68 @@ cd thumbguard
 ```
 
 That is all. The script builds the binary, installs it to
-`~/.local/bin/thumbguard` and registers a LaunchAgent — the service is running
-right away and comes back at every login. No administrator rights required.
+`~/.local/bin/thumbguard` and registers a LaunchAgent — the service runs right
+away and comes back at every login. No administrator rights required.
 
-**See what it is doing:**
+### Never used the Terminal? Step by step
+
+**1 — Open the Terminal.** Press `Cmd` + `Space`, type `Terminal`, press
+`Return`. A window opens showing a short line that ends in `%`. That is the
+prompt. Everything below gets pasted there, one block at a time, each followed
+by `Return`.
+
+**2 — Install Apple's compiler tools.** Thumbguard is built from source on your
+own machine, which needs Apple's command line tools:
+
+```bash
+xcode-select --install
+```
+
+A dialog appears — confirm it and let it finish (a few minutes). If you instead
+get `command line tools are already installed`, you already have them; move on.
+
+**3 — Download and install.** Copy all three lines together, paste them, press
+`Return`:
+
+```bash
+git clone https://github.com/cirolix/thumbguard.git
+cd thumbguard
+./install.sh
+```
+
+It worked when the output ends with:
+
+```
+Running. The service will now start automatically at every login.
+```
+
+**4 — Confirm it is up:**
+
+```bash
+thumbguard --status
+```
+
+`Service: running` in the output means everything is in place.
+
+**That is the whole setup.** You can close the Terminal — the service keeps
+running in the background and restarts itself after every reboot. There is no
+app icon and no menu bar symbol; it is meant to stay invisible and only shows
+up in the log when it actually steps in.
+
+**If something goes wrong:**
+
+| Message | What it means |
+|---|---|
+| `xcode-select: command line tools are already installed` | All good, continue with step 3 |
+| `git: command not found` | Step 2 has not completed yet |
+| `thumbguard: command not found` | `~/.local/bin` is not on your `PATH` — use `~/.local/bin/thumbguard --status` instead |
+| `Service: not loaded` | Check `~/Library/Logs/thumbguard.log` for the reason |
+
+### See what it is doing
 
 ```bash
 thumbguard --status                      # watched processes and service state
-tail -f ~/Library/Logs/thumbguard.log    # live log
+tail -f ~/Library/Logs/thumbguard.log    # live log (leave with Ctrl + C)
 ```
 
 A log line looks like this:
@@ -29,26 +83,23 @@ A log line looks like this:
 2026-09-21 12:31:50 KILL    PID 85631  OfficeThumbnailExtension    sustained load, 100 % CPU
 ```
 
-**Still getting heat?** Switch to block mode — no HTML/Office thumbnails at
-all, but the load cannot build up in the first place:
+### Still getting heat?
+
+Switch to block mode — no HTML/Office thumbnails at all, but the load cannot
+build up in the first place:
 
 ```bash
 ./install.sh --block
 ```
 
-**Remove everything again:**
-
-```bash
-./uninstall.sh
-```
+Back to normal with `./install.sh` and no arguments. Remove everything again
+with `./uninstall.sh`.
 
 ### Requirements
 
 * macOS on Apple Silicon or Intel; tested on macOS 26 (Darwin 25.6.0)
-* Command line tools for the compiler: `xcode-select --install`
-* If `thumbguard --status` is not found, `~/.local/bin` is not on your `PATH` —
-  either call `~/.local/bin/thumbguard --status` directly or add that directory
-  to your shell profile
+* Apple command line tools for the compiler: `xcode-select --install`
+* No administrator rights, no Homebrew, no other dependencies
 
 ### Already running hot right now?
 
