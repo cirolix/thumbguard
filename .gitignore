@@ -1,0 +1,7 @@
+# Uebersetztes Programm
+thumbguard
+*.o
+*.dSYM/
+
+# macOS
+.DS_Store
